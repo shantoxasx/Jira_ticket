@@ -1034,6 +1034,28 @@ document.querySelector('.search-box input').addEventListener('keypress', functio
         });
 
 
+
+	   fetch(`/jira/${issueNumber}`)
+  .then(response => {
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}, statusText: ${response.statusText}`);
+    }
+    return response.json();
+  })
+  .then(data => {
+    // Process data
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    document.getElementById('result').innerHTML = `
+      <div class="jira-card error-card">
+        <p class="error-message">An error occurred while fetching the data:</p>
+        <p>${error.message}</p>
+      </div>
+    `;
+  });
+
+
    </script>
    
    
