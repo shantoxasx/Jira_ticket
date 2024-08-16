@@ -34,8 +34,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-			border-bottom: 4px solid red;
-
+            border-bottom: 4px solid red;
         }
         .top-bar a {
             color: white;
@@ -64,25 +63,24 @@
             display: flex;
             justify-content: center;
         }
-.jira-card {
-    background-color: #fff;
-    border-radius: 12px;
-    box-shadow: 
-        0 10px 90px rgba(0, 0, 0, 0.15),
-        0 1px 15px rgba(0, 0, 0, 0.1),
-        0 0 0 1px rgba(213, 43, 30, 0.05);
-    padding: 25px;
-    max-width: 1200px;
-    width: 100%;
-    margin: 30px auto;
-    font-family: 'Outfit', sans-serif;
-    border-bottom: 5px solid #d52b1e;
-    border-top: 5px solid #d52b1e;
-    position: relative;
-    overflow: hidden;
-}
-
-.jira-card::before {
+        .jira-card {
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 
+                0 10px 90px rgba(0, 0, 0, 0.15),
+                0 1px 15px rgba(0, 0, 0, 0.1),
+                0 0 0 1px rgba(213, 43, 30, 0.05);
+            padding: 25px;
+            max-width: 1200px;
+            width: 100%;
+            margin: 30px auto;
+            font-family: 'Outfit', sans-serif;
+            border-bottom: 5px solid #d52b1e;
+            border-top: 5px solid #d52b1e;
+            position: relative;
+            overflow: hidden;
+        }
+ .jira-card::before {
     content: '';
     position: absolute;
     top: 5px;
@@ -616,15 +614,13 @@ body {
             to { width: 100% }
         }
 
-
     </style>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
-    <link href="style_page.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-	
 </head>
 <body class="background">
     <div class="top-bar-wrapper">
@@ -655,445 +651,430 @@ body {
         </div>
     </div>
     <div class="fading-underline"></div>
-	<div id="initial-message"></div>
+    <div id="initial-message"></div>
     <div id="loading-screen">
         <div class="loader"></div>
         <p>Loading...</p>
     </div>
-     <div id="result"></div>
-   <script>function updateDate() {
-    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    const currentDate = new Date().toLocaleDateString('en-US', options);
-    document.getElementById('current-date').textContent = currentDate;
-}
-updateDate();
+    <div id="result"></div>
 
-function parseDescription(description) {
-    if (!description || !description.content) return 'No Description';
-    let text = '';
-    description.content.forEach(block => {
-        if (block.type === 'paragraph') {
-            block.content.forEach(content => {
-                if (content.type === 'text') {
-                    text += content.text;
-                } else if (content.type === 'hardBreak') {
-                    text += '\n';
+    <script>
+    function updateDate() {
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        const currentDate = new Date().toLocaleDateString('en-US', options);
+        document.getElementById('current-date').textContent = currentDate;
+    }
+    updateDate();
+
+    function parseDescription(description) {
+        if (!description || !description.content) return 'No Description';
+        let text = '';
+        description.content.forEach(block => {
+            if (block.type === 'paragraph') {
+                block.content.forEach(content => {
+                    if (content.type === 'text') {
+                        text += content.text;
+                    } else if (content.type === 'hardBreak') {
+                        text += '\n';
+                    }
+                });
+                text += '\n';
+            }
+        });
+        return text.trim();
+    }
+
+    async function fetchJiraIssue(issueNumber) {
+        const username = 'itsdsupportteam-it@edenred.com';
+        const apiToken = 'ATATT3xFfGF0oykRAlCx3OedmyqYIdNehstFll2vYUvSfnNwrg3dafqnuUvLrQ7t7WH3sR5GtE47APpp-FLe85btXnXT5ntviKU_O_qC8fG_eHRSHfJUVF-bVD3_MVtB_kyro3Lv3Q45ZFQsnXvDHO-eKnZvlmtyLyuC1yCJ_GYLm59JMQzMchk=F66895D4';
+        const jiraUrl = `https://edenred.atlassian.net/rest/api/3/issue/${issueNumber}`;
+
+        try {
+            const response = await axios.get(jiraUrl, {
+                auth: {
+                    username: username,
+                    password: apiToken
                 }
             });
-            text += '\n';
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching Jira issue:', error);
+            throw error;
         }
-    });
-    return text.trim();
-}
+    }
 
-function fetchHistory(issueNumber) {
-    return fetch(`/jira/${issueNumber}/changelog`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => formatHistory(data.values))
-        .catch(error => {
+    async function fetchHistory(issueNumber) {
+        const username = 'itsdsupportteam-it@edenred.com';
+        const apiToken = 'ATATT3xFfGF0oykRAlCx3OedmyqYIdNehstFll2vYUvSfnNwrg3dafqnuUvLrQ7t7WH3sR5GtE47APpp-FLe85btXnXT5ntviKU_O_qC8fG_eHRSHfJUVF-bVD3_MVtB_kyro3Lv3Q45ZFQsnXvDHO-eKnZvlmtyLyuC1yCJ_GYLm59JMQzMchk=F66895D4';
+        const jiraUrl = `https://edenred.atlassian.net/rest/api/3/issue/${issueNumber}/changelog`;
+
+        try {
+            const response = await axios.get(jiraUrl, {
+                auth: {
+                    username: username,
+                    password: apiToken
+                }
+            });
+            return formatHistory(response.data.values);
+        } catch (error) {
             console.error('Error fetching history:', error);
             return `<p class="error-message">Error fetching history: ${error.message}</p>`;
-        });
-}
+        }
+    }
 
-function searchJiraIssue(issueNumber) {
-    document.getElementById('loading-screen').style.display = 'flex';
-    document.getElementById('initial-message').style.display = 'none';
+    async function searchJiraIssue(issueNumber) {
+        document.getElementById('loading-screen').style.display = 'flex';
+        document.getElementById('initial-message').style.display = 'none';
 
-    Promise.all([
-        fetch(`/jira/${issueNumber}`).then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+        try {
+            const [data, historyContent] = await Promise.all([
+                fetchJiraIssue(issueNumber),
+                fetchHistory(issueNumber)
+            ]);
+
+            const description = parseDescription(data.fields?.description);
+            const createdDate = formatDateItalian(data.fields?.created);
+            const updatedDate = formatDateItalian(data.fields?.updated);
+            const creatorName = data.fields?.creator?.displayName ?? 'Unknown';
+            const creatorEmail = data.fields?.creator?.emailAddress ?? '';
+            const creatorLink = creatorEmail ? `<a href="mailto:${creatorEmail}">${creatorName}</a>` : creatorName;
+            const recipients = formatRecipients(data.fields?.customfield_10016);
+            const commentHistory = formatComments(data.fields?.comment?.comments);
+            
+            const organization = data.fields?.customfield_10004?.[0]?.name ?? 'No Organization';
+            const sfdcCaseNumber = data.fields?.customfield_14896 ?? 'No SFDC Case Number';
+            
+            const status = data.fields?.status?.name ?? 'Unknown';
+            const statusClass = status === 'Chiusa' || status.startsWith('Resolved') ? 'status-badge-green' : 'status-badge-blue';
+
+            // Process SLA information
+            const slaInfo = [];
+
+            // Time First Take in Charge L1
+            if (data.fields?.customfield_16699?.completedCycles?.length > 0) {
+                const l1Cycle = data.fields.customfield_16699.completedCycles[0];
+                slaInfo.push({
+                    name: "Time First Take in Charge L1",
+                    respected: !l1Cycle.breached,
+                    message: l1Cycle.breached ? "SLA for L1 has been breached" : "Support respected the SLA of L1"
+                });
             }
-            return response.json();
-        }),
-        fetchHistory(issueNumber)
-    ])
-    .then(([data, historyContent]) => {
-        const description = parseDescription(data.fields?.description);
-        const createdDate = formatDateItalian(data.fields?.created);
-        const updatedDate = formatDateItalian(data.fields?.updated);
-        const creatorName = data.fields?.creator?.displayName ?? 'Unknown';
-        const creatorEmail = data.fields?.creator?.emailAddress ?? '';
-        const creatorLink = creatorEmail ? `<a href="mailto:${creatorEmail}">${creatorName}</a>` : creatorName;
-        const recipients = formatRecipients(data.fields?.customfield_10016);
-        const commentHistory = formatComments(data.fields?.comment?.comments);
-        
-        const organization = data.fields?.customfield_10004?.[0]?.name ?? 'No Organization';
-        const sfdcCaseNumber = data.fields?.customfield_14896 ?? 'No SFDC Case Number';
-        
-        const status = data.fields?.status?.name ?? 'Unknown';
-        const statusClass = status === 'Chiusa' || status.startsWith('Resolved') ? 'status-badge-green' : 'status-badge-blue';
 
-        // Process SLA information
-        const slaInfo = [];
+            // Time to Assignment
+            if (data.fields?.customfield_16562?.completedCycles?.length > 0) {
+                const assignmentCycle = data.fields.customfield_16562.completedCycles[0];
+                slaInfo.push({
+                    name: "Time to Assignment",
+                    respected: !assignmentCycle.breached,
+                    message: assignmentCycle.breached ? "SLA for Time to Assignment has been breached" : "Support respected the SLA of Time to Assignment"
+                });
+            }
 
-        // Time First Take in Charge L1
-        if (data.fields?.customfield_16699?.completedCycles?.length > 0) {
-            const l1Cycle = data.fields.customfield_16699.completedCycles[0];
-            slaInfo.push({
-                name: "Time First Take in Charge L1",
-                respected: !l1Cycle.breached,
-                message: l1Cycle.breached ? "SLA for L1 has been breached" : "Support respected the SLA of L1"
-            });
-        }
+            // Time to Resolution Italy
+            if (data.fields?.customfield_16572?.completedCycles?.length > 0) {
+                const resolutionCycle = data.fields.customfield_16572.completedCycles[0];
+                slaInfo.push({
+                    name: "Time to Resolution Italy",
+                    respected: !resolutionCycle.breached,
+                    message: resolutionCycle.breached ? "SLA for Time to Resolution Italy has been breached" : "Support respected the Time to Resolution Italy"
+                });
+            }
 
-        // Time to Assignment
-        if (data.fields?.customfield_16562?.completedCycles?.length > 0) {
-            const assignmentCycle = data.fields.customfield_16562.completedCycles[0];
-            slaInfo.push({
-                name: "Time to Assignment",
-                respected: !assignmentCycle.breached,
-                message: assignmentCycle.breached ? "SLA for Time to Assignment has been breached" : "Support respected the SLA of Time to Assignment"
-            });
-        }
-
-        // Time to Resolution Italy
-        if (data.fields?.customfield_16572?.completedCycles?.length > 0) {
-            const resolutionCycle = data.fields.customfield_16572.completedCycles[0];
-            slaInfo.push({
-                name: "Time to Resolution Italy",
-                respected: !resolutionCycle.breached,
-                message: resolutionCycle.breached ? "SLA for Time to Resolution Italy has been breached" : "Support respected the Time to Resolution Italy"
-            });
-        }
-
-        const slaInfoHtml = slaInfo.map(info => `
-            <div class="info-item ${info.respected ? 'green-border' : 'red-border'}">
-                <strong>${info.name}:</strong> ${info.message}
-            </div>
-        `).join('');
-
-        const result = `
-            <div class="jira-card">
-                <div class="jira-header-container">
-                    <div class="jira-header">
-                        <h3>${data.fields?.summary ?? 'No Summary'}</h3>
-                         <div class="status-badge ${statusClass}">${status}</div>
-                    </div>
-                    <div class="jira-header-underline"></div>
+            const slaInfoHtml = slaInfo.map(info => `
+                <div class="info-item ${info.respected ? 'green-border' : 'red-border'}">
+                    <strong>${info.name}:</strong> ${info.message}
                 </div>
-                <br>
-                <br>
-                <div class="jira-content">
-                    <div class="left-column">
-                        <div class="info-item red-border"><strong>Request Type:</strong> ${data.fields?.customfield_10015?.requestType?.name ?? 'Not Specified'}</div>
-                        <div class="info-item red-border"><strong>Priority:</strong> ${data.fields?.priority?.name ?? 'Not Set'}</div>
-                        <div class="info-item red-border"><strong>Technical Component:</strong> ${data.fields?.customfield_16560?.value ?? 'N/A'}</div>
-                        <div class="info-item red-border"><strong>Component:</strong> ${data.fields?.components?.[0]?.name ?? 'Nessuno Componente'}</div>
-                        <div class="info-item red-border"><strong>Assignee:</strong> ${data.fields?.assignee?.displayName ?? 'Unassigned'}</div>
+            `).join('');
+
+            const result = `
+                <div class="jira-card">
+                    <div class="jira-header-container">
+                        <div class="jira-header">
+                            <h3>${data.fields?.summary ?? 'No Summary'}</h3>
+                             <div class="status-badge ${statusClass}">${status}</div>
+                        </div>
+                        <div class="jira-header-underline"></div>
                     </div>
-                    <div class="right-column">
-                        <div class="info-item blue-border"><strong>Organization:</strong> ${organization}</div>
-                        <div class="info-item blue-border"><strong>SFDC Case Number:</strong> ${sfdcCaseNumber}</div>
-                        <div class="info-item blue-border"><strong>Creator:</strong> ${creatorLink}</div>
-                        <div class="info-item blue-border"><strong>Recipients:</strong> ${recipients}</div>
-                        <div class="info-item blue-border"><strong>AM1 Operator:</strong> ${data.fields?.customfield_16088?.displayName ?? 'Not Specified'}</div>
+                    <br>
+                    <br>
+                    <div class="jira-content">
+                        <div class="left-column">
+                            <div class="info-item red-border"><strong>Request Type:</strong> ${data.fields?.customfield_10015?.requestType?.name ?? 'Not Specified'}</div>
+                            <div class="info-item red-border"><strong>Priority:</strong> ${data.fields?.priority?.name ?? 'Not Set'}</div>
+                            <div class="info-item red-border"><strong>Technical Component:</strong> ${data.fields?.customfield_16560?.value ?? 'N/A'}</div>
+                            <div class="info-item red-border"><strong>Component:</strong> ${data.fields?.components?.[0]?.name ?? 'Nessuno Componente'}</div>
+                            <div class="info-item red-border"><strong>Assignee:</strong> ${data.fields?.assignee?.displayName ?? 'Unassigned'}</div>
+                        </div>
+                        <div class="right-column">
+                            <div class="info-item blue-border"><strong>Organization:</strong> ${organization}</div>
+                            <div class="info-item blue-border"><strong>SFDC Case Number:</strong> ${sfdcCaseNumber}</div>
+                            <div class="info-item blue-border"><strong>Creator:</strong> ${creatorLink}</div>
+                            <div class="info-item blue-border"><strong>Recipients:</strong> ${recipients}</div>
+                            <div class="info-item blue-border"><strong>AM1 Operator:</strong> ${data.fields?.customfield_16088?.displayName ?? 'Not Specified'}</div>
+                        </div>
                     </div>
-                </div>
-                 <div class="extra-info-container">
-                        <button id="showExtraInfoBtn" class="show-extra-info-btn">Extra Information</button>
-                        <div id="extraInfoBox" class="extra-info-box">
-                            <div class="extra-info-content">
-                                <div class="extra-info-left-column">
-                                    ${slaInfoHtml}
-                                </div>
-                                <div class="extra-info-right-column">
-                                    <div class="info-item blue-border"><strong>AM2 Operator:</strong> ${data.fields?.customfield_16090?.displayName ?? 'Nessuno'}</div>
-                                    <div class="info-item blue-border"><strong>AM3 Operator:</strong> ${data.fields?.customfield_16091?.displayName ?? 'Nessuno'}</div>
+                     <div class="extra-info-container">
+                            <button id="showExtraInfoBtn" class="show-extra-info-btn">Extra Information</button>
+                            <div id="extraInfoBox" class="extra-info-box">
+                                <div class="extra-info-content">
+                                    <div class="extra-info-left-column">
+                                        ${slaInfoHtml}
+                                    </div>
+                                    <div class="extra-info-right-column">
+                                        <div class="info-item blue-border"><strong>AM2 Operator:</strong> ${data.fields?.customfield_16090?.displayName ?? 'Nessuno'}</div>
+										<div class="info-item blue-border"><strong>AM3 Operator:</strong> ${data.fields?.customfield_16091?.displayName ?? 'Nessuno'}</div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+                    <div class="dates">
+                        <p class="date-item updated-date"><strong>Updated:</strong> ${updatedDate ?? 'Not Specified'}</p>
+                        <p class="date-item created-date"><strong>Created:</strong> ${createdDate ?? 'Not Specified'}</p>
                     </div>
-                <div class="dates">
-                    <p class="date-item updated-date"><strong>Updated:</strong> ${updatedDate ?? 'Not Specified'}</p>
-                    <p class="date-item created-date"><strong>Created:</strong> ${createdDate ?? 'Not Specified'}</p>
-                </div>
-                <div class="description-box">
-                    <h4>Description:</h4>
-                    <pre>${description}</pre>
-                </div>
-                <div class="button-container">
-                    <button id="showCommentsBtn" class="show-comments-btn">Show Comments</button>
-                    <button id="showHistoryBtn" class="show-comments-btn">Show History</button>
-                </div>
-                <div id="historyBox" class="comment-box" style="display: none;">
-                    <h4>Issue History:</h4>
-                    <div id="historyContent">${historyContent}</div>
-                </div>
-                <div id="commentBox" class="comment-box" style="display: none;">
-                    <h4>Comment History:</h4>
-                    ${commentHistory}
-                </div>
-            </div>
-        `;
-        document.getElementById('result').innerHTML = result;
-        document.getElementById('loading-screen').style.display = 'none';
-
-        addEventListeners(issueNumber);
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        const errorMessage = `
-            <div class="jira-card error-card">
-                <p class="error-message">An error occurred while fetching the data:</p>
-                <p>${error.message}</p>
-            </div>
-        `;
-        document.getElementById('result').innerHTML = errorMessage;
-        document.getElementById('loading-screen').style.display = 'none';
-    });
-}
-
-function addEventListeners(issueNumber) {
-    const extraInfoBtn = document.getElementById('showExtraInfoBtn');
-    const extraInfoBox = document.getElementById('extraInfoBox');
-    const commentsBtn = document.getElementById('showCommentsBtn');
-    const commentBox = document.getElementById('commentBox');
-    const historyBtn = document.getElementById('showHistoryBtn');
-    const historyBox = document.getElementById('historyBox');
-
-    if (extraInfoBtn && extraInfoBox) {
-        extraInfoBtn.addEventListener('click', function() {
-            extraInfoBox.classList.toggle('show');
-            this.textContent = extraInfoBox.classList.contains('show') ? 'Hide Extra Information' : 'Extra Information';
-        });
-    }
-
-    if (commentsBtn && commentBox && historyBtn && historyBox) {
-        commentsBtn.addEventListener('click', function() {
-            if (commentBox.style.display === 'none') {
-                commentBox.style.display = 'block';
-                historyBox.style.display = 'none';
-                this.textContent = 'Hide Comments';
-                historyBtn.textContent = 'Show History';
-            } else {
-                commentBox.style.display = 'none';
-                this.textContent = 'Show Comments';
-            }
-        });
-    }
-
-    if (historyBtn && historyBox && commentsBtn && commentBox) {
-        historyBtn.addEventListener('click', function() {
-            if (historyBox.style.display === 'none') {
-                historyBox.style.display = 'block';
-                commentBox.style.display = 'none';
-                this.textContent = 'Hide History';
-                commentsBtn.textContent = 'Show Comments';
-            } else {
-                historyBox.style.display = 'none';
-                this.textContent = 'Show History';
-            }
-        });
-    }
-}
-
-function formatDateItalian(dateString) {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    const options = { 
-        year: 'numeric', 
-        month: '2-digit', 
-        day: '2-digit', 
-        hour: '2-digit', 
-        minute: '2-digit', 
-        hour12: false 
-    };
-    return date.toLocaleString('it-IT', options).replace(',', '');
-}
-
-function formatRecipients(recipients) {
-    if (!recipients || recipients.length === 0) return 'None';
-    return recipients.map(recipient => {
-        const name = recipient.displayName ?? 'Unknown';
-        const email = recipient.emailAddress ?? '';
-        return email ? `<a href="mailto:${email}">${name}</a>` : name;
-    }).join(', ');
-}
-
-function formatComments(comments) {
-    if (!comments || comments.length === 0) return '<p>No comments</p>';
-    
-    const formattedComments = comments
-        .filter(comment => {
-            if (comment.jsdPublic === false) return false;
-            const commentContent = extractCommentText(comment.body);
-            return commentContent && commentContent.trim() !== '';
-        })
-        .map(comment => {
-            const authorName = comment.author?.displayName ?? 'Unknown';
-            const commentDate = formatDateItalian(comment.created);
-            const commentContent = extractCommentText(comment.body);
-            
-            return `
-                <div class="comment">
-                    <div class="comment-header">
-                        <span class="comment-author">${authorName}</span>
-                        <span class="comment-date">${commentDate}</span>
+                    <div class="description-box">
+                        <h4>Description:</h4>
+                        <pre>${description}</pre>
                     </div>
-                    <pre class="comment-content">${commentContent}</pre>
+                    <div class="button-container">
+                        <button id="showCommentsBtn" class="show-comments-btn">Show Comments</button>
+                        <button id="showHistoryBtn" class="show-comments-btn">Show History</button>
+                    </div>
+                    <div id="historyBox" class="comment-box" style="display: none;">
+                        <h4>Issue History:</h4>
+                        <div id="historyContent">${historyContent}</div>
+                    </div>
+                    <div id="commentBox" class="comment-box" style="display: none;">
+                        <h4>Comment History:</h4>
+                        ${commentHistory}
+                    </div>
                 </div>
             `;
-        })
-        .join('');
+            document.getElementById('result').innerHTML = result;
+            document.getElementById('loading-screen').style.display = 'none';
 
-    return formattedComments || '<p>No comments</p>';
-}
-
-function extractCommentText(body) {
-    if (!body || !body.content) return '';
-
-    return body.content.map(block => {
-        if (block.type === 'paragraph' || block.type === 'orderedList' || block.type === 'unorderedList') {
-            return extractTextFromContent(block.content);
+            addEventListeners(issueNumber);
+        } catch (error) {
+            console.error('Error:', error);
+            const errorMessage = `
+                <div class="jira-card error-card">
+                    <p class="error-message">An error occurred while fetching the data:</p>
+                    <p>${error.message}</p>
+                </div>
+            `;
+            document.getElementById('result').innerHTML = errorMessage;
+            document.getElementById('loading-screen').style.display = 'none';
         }
-        return '';
-    }).join('\n\n');
-}
+    }
 
-function extractTextFromContent(content) {
-    if (!content) return '';
-    return content.map(item => {
-        if (item.type === 'text') return item.text;
-        if (item.type === 'hardBreak') return '\n';
-        if (item.content) return extractTextFromContent(item.content);
-        return '';
-    }).join('');
-}
+    function addEventListeners(issueNumber) {
+        const extraInfoBtn = document.getElementById('showExtraInfoBtn');
+        const extraInfoBox = document.getElementById('extraInfoBox');
+        const commentsBtn = document.getElementById('showCommentsBtn');
+        const commentBox = document.getElementById('commentBox');
+        const historyBtn = document.getElementById('showHistoryBtn');
+        const historyBox = document.getElementById('historyBox');
 
-function formatHistory(changes) {
-    if (!changes || changes.length === 0) return '<p>No history available</p>';
-    
-    return `
-        <div class="history-timeline">
-            ${changes.map(change => {
-                const author = change.author.displayName;
-                const date = formatDateItalian(change.created);
-                const items = change.items.map(item => `
-                    <div class="history-item-detail">
-                        <strong>${item.field}:</strong> 
-                        ${item.fromString ? `From "${item.fromString}"` : ''} 
-                        ${item.toString ? `To "${item.toString}"` : ''}
-                    </div>
-                `).join('');
+        if (extraInfoBtn && extraInfoBox) {
+            extraInfoBtn.addEventListener('click', function() {
+                extraInfoBox.classList.toggle('show');
+                this.textContent = extraInfoBox.classList.contains('show') ? 'Hide Extra Information' : 'Extra Information';
+            });
+        }
+
+        if (commentsBtn && commentBox && historyBtn && historyBox) {
+            commentsBtn.addEventListener('click', function() {
+                if (commentBox.style.display === 'none') {
+                    commentBox.style.display = 'block';
+                    historyBox.style.display = 'none';
+                    this.textContent = 'Hide Comments';
+                    historyBtn.textContent = 'Show History';
+                } else {
+                    commentBox.style.display = 'none';
+                    this.textContent = 'Show Comments';
+                }
+            });
+        }
+
+        if (historyBtn && historyBox && commentsBtn && commentBox) {
+            historyBtn.addEventListener('click', function() {
+                if (historyBox.style.display === 'none') {
+                    historyBox.style.display = 'block';
+                    commentBox.style.display = 'none';
+                    this.textContent = 'Hide History';
+                    commentsBtn.textContent = 'Show Comments';
+                } else {
+                    historyBox.style.display = 'none';
+                    this.textContent = 'Show History';
+                }
+            });
+        }
+    }
+
+    function formatDateItalian(dateString) {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        const options = { 
+            year: 'numeric', 
+            month: '2-digit', 
+            day: '2-digit', 
+            hour: '2-digit', 
+            minute: '2-digit', 
+            hour12: false 
+        };
+        return date.toLocaleString('it-IT', options).replace(',', '');
+    }
+
+    function formatRecipients(recipients) {
+        if (!recipients || recipients.length === 0) return 'None';
+        return recipients.map(recipient => {
+            const name = recipient.displayName ?? 'Unknown';
+            const email = recipient.emailAddress ?? '';
+            return email ? `<a href="mailto:${email}">${name}</a>` : name;
+        }).join(', ');
+    }
+
+    function formatComments(comments) {
+        if (!comments || comments.length === 0) return '<p>No comments</p>';
+        
+        const formattedComments = comments
+            .filter(comment => {
+                if (comment.jsdPublic === false) return false;
+                const commentContent = extractCommentText(comment.body);
+                return commentContent && commentContent.trim() !== '';
+            })
+            .map(comment => {
+                const authorName = comment.author?.displayName ?? 'Unknown';
+                const commentDate = formatDateItalian(comment.created);
+                const commentContent = extractCommentText(comment.body);
                 
                 return `
-                    <div class="history-box">
-                        <div class="history-box-header">
-                            <span class="history-author">${author}</span>
-                            <span class="history-date">${date}</span>
+                    <div class="comment">
+                        <div class="comment-header">
+                            <span class="comment-author">${authorName}</span>
+                            <span class="comment-date">${commentDate}</span>
                         </div>
-                        <div class="history-box-content">
-                            ${items}
-                        </div>
+                        <pre class="comment-content">${commentContent}</pre>
                     </div>
                 `;
-            }).join('')}
-        </div>
-    `;
-}
+            })
+            .join('');
 
-document.querySelector('.search-box input').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') {
-        const issueNumber = this.value.trim();
-        if (issueNumber) {
-            document.getElementById('initial-message').style.display = 'none';
-            document.getElementById('result').innerHTML = '';
-            searchJiraIssue(issueNumber);
-        }
+        return formattedComments || '<p>No comments</p>';
     }
-});
 
+    function extractCommentText(body) {
+        if (!body || !body.content) return '';
 
-     function typeWriter(text, i, fnCallback) {
-            if (i < text.length) {
-                document.getElementById("initial-message").innerHTML = text.substring(0, i+1);
-                setTimeout(function() {
-                    typeWriter(text, i + 1, fnCallback)
-                }, 100);
-            } else if (typeof fnCallback == 'function') {
-                setTimeout(fnCallback, 700);
+        return body.content.map(block => {
+            if (block.type === 'paragraph' || block.type === 'orderedList' || block.type === 'unorderedList') {
+                return extractTextFromContent(block.content);
+            }
+            return '';
+        }).join('\n\n');
+    }
+
+    function extractTextFromContent(content) {
+        if (!content) return '';
+        return content.map(item => {
+            if (item.type === 'text') return item.text;
+            if (item.type === 'hardBreak') return '\n';
+            if (item.content) return extractTextFromContent(item.content);
+            return '';
+        }).join('');
+    }
+
+    function formatHistory(changes) {
+        if (!changes || changes.length === 0) return '<p>No history available</p>';
+        
+        return `
+            <div class="history-timeline">
+                ${changes.map(change => {
+                    const author = change.author.displayName;
+                    const date = formatDateItalian(change.created);
+                    const items = change.items.map(item => `
+                        <div class="history-item-detail">
+                            <strong>${item.field}:</strong> 
+                            ${item.fromString ? `From "${item.fromString}"` : ''} 
+                            ${item.toString ? `To "${item.toString}"` : ''}
+                        </div>
+                    `).join('');
+                    
+                    return `
+                        <div class="history-box">
+                            <div class="history-box-header">
+                                <span class="history-author">${author}</span>
+                                <span class="history-date">${date}</span>
+                            </div>
+                            <div class="history-box-content">
+                                ${items}
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        `;
+    }
+
+    document.querySelector('.search-box input').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            const issueNumber = this.value.trim();
+            if (issueNumber) {
+                document.getElementById('initial-message').style.display = 'none';
+                document.getElementById('result').innerHTML = '';
+                searchJiraIssue(issueNumber);
             }
         }
+    });
 
-
-        window.addEventListener('load', function() {
-            if (!document.querySelector('.search-box input').value.trim()) {
-                document.getElementById('initial-message').style.display = 'block';
-                document.getElementById('loading-screen').style.display = 'none';
-                typeWriter("Write Something in the Search Box", 0, function() {
-                    // Typing is complete
-                });
-            }
-        });
-
-
-
-	   fetch(`/jira/${issueNumber}`)
-  .then(response => {
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}, statusText: ${response.statusText}`);
+    function typeWriter(text, i, fnCallback) {
+        if (i < text.length) {
+            document.getElementById("initial-message").innerHTML = text.substring(0, i+1);
+            setTimeout(function() {
+                typeWriter(text, i + 1, fnCallback)
+            }, 100);
+        } else if (typeof fnCallback == 'function') {
+            setTimeout(fnCallback, 700);
+        }
     }
-    return response.json();
-  })
-  .then(data => {
-    // Process data
-  })
-  .catch(error => {
-    console.error('Error:', error);
-    document.getElementById('result').innerHTML = `
-      <div class="jira-card error-card">
-        <p class="error-message">An error occurred while fetching the data:</p>
-        <p>${error.message}</p>
-      </div>
-    `;
-  });
 
+    window.addEventListener('load', function() {
+        if (!document.querySelector('.search-box input').value.trim()) {
+            document.getElementById('initial-message').style.display = 'block';
+            document.getElementById('loading-screen').style.display = 'none';
+            typeWriter("Write Something in the Search Box", 0, function() {
+                // Typing is complete
+            });
+        }
+    });
+    </script>
 
-   </script>
-   
-   
-<footer class="edenred-footer">
-    <div class="footer-content">
-        <div class="contact-info">
-            <div class="info-item">
-                <i class="fas fa-map-marker-alt"></i>
-                <span style="color: white;">Via Giovanni Battista Pirelli, 18, 20124 <br>Milano, Italy</span>
+    <footer class="edenred-footer">
+        <div class="footer-content">
+            <div class="contact-info">
+                <div class="info-item">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span style="color: white;">Via Giovanni Battista Pirelli, 18, 20124 <br>Milano, Italy</span>
+                </div>
+                <div class="info-item">
+                    <i class="fas fa-phone"></i>
+                    <span style="color: white;">02 269041</span>
+                </div>
+                <div class="info-item">
+                    <i class="fas fa-envelope"></i>
+                    <a href="mailto:support@edenred.com">support@edenred.com</a>
+                </div>
             </div>
-            <div class="info-item">
-                <i class="fas fa-phone"></i>
-                <span style="color: white;">02 269041</span>
-            </div>
-            <div class="info-item">
-                <i class="fas fa-envelope"></i>
-                <a href="mailto:support@edenred.com">support@edenred.com</a>
+            <div class="company-info">
+                <h3>About Edenred</h3>
+                <p>Edenred is a leading digital platform for services and payments and the everyday companion for people at work.</p>
+                <div class="social-icons">
+                    <a href="#" class="fab fa-facebook-f"></a>
+                    <a href="#" class="fab fa-twitter"></a>
+                    <a href="#" class="fab fa-linkedin-in"></a>
+                    <a href="#" class="fab fa-instagram"></a>
+                </div>
             </div>
         </div>
-        <div class="company-info">
-            <h3>About Edenred</h3>
-            <p>Edenred is a leading digital platform for services and payments and the everyday companion for people at work.</p>
-            <div class="social-icons">
-                <a href="#" class="fab fa-facebook-f"></a>
-                <a href="#" class="fab fa-twitter"></a>
-                <a href="#" class="fab fa-linkedin-in"></a>
-                <a href="#" class="fab fa-instagram"></a>
-            </div>
-        </div>
-    </div>
-</footer> 
-   
-   
-   
-   
-   
-   
-   
-   
+    </footer>
 </body>
 </html>
